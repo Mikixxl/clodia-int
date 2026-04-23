@@ -37,25 +37,23 @@ const LANG_META = [{"c": "en", "n": "English", "rtl": false}, {"c": "de", "n": "
   function applyLang(code) {
     const dict = I18N[code] || I18N.en;
     const meta = LANG_META.find(l => l.c === code) || LANG_META[0];
-    // Translate elements tagged with data-i18n
     document.querySelectorAll('[data-i18n]').forEach(function (el) {
       const key = el.getAttribute('data-i18n');
       if (!dict[key]) return;
       const attr = el.getAttribute('data-i18n-attr');
-      if (attr) {
-        el.setAttribute(attr, dict[key]);
-      } else if (el.getAttribute('data-i18n-html') === '1') {
-        el.innerHTML = dict[key];
-      } else {
-        el.textContent = dict[key];
-      }
+      try {
+        if (attr) {
+          el.setAttribute(attr, dict[key]);
+        } else if (el.getAttribute('data-i18n-html') === '1') {
+          el.innerHTML = dict[key];
+        } else {
+          el.textContent = dict[key];
+        }
+      } catch (e) { /* swallow per-element failures so one bad key doesn't break the page */ }
     });
-    // Document-level attributes
     document.documentElement.setAttribute('lang', code);
     document.documentElement.setAttribute('dir', meta.rtl ? 'rtl' : 'ltr');
-    // Persist
     try { localStorage.setItem(LS_KEY, code); } catch (_) {}
-    // Reflect current selection in the switcher(s)
     document.querySelectorAll('.lang-switcher select').forEach(function (sel) {
       sel.value = code;
     });
@@ -65,10 +63,9 @@ const LANG_META = [{"c": "en", "n": "English", "rtl": false}, {"c": "de", "n": "
   }
 
   function injectSwitcher() {
-    // Build the switcher once, insert into every .nav-inner before .nav-toggle
     const current = pickInitialLang();
     document.querySelectorAll('.nav-inner').forEach(function (nav) {
-      if (nav.querySelector('.lang-switcher')) return; // avoid double-insert
+      if (nav.querySelector('.lang-switcher')) return;
       const wrap = document.createElement('div');
       wrap.className = 'lang-switcher';
       wrap.innerHTML =
@@ -80,56 +77,79 @@ const LANG_META = [{"c": "en", "n": "English", "rtl": false}, {"c": "de", "n": "
         '</select>';
       const toggle = nav.querySelector('.nav-toggle');
       if (toggle) nav.insertBefore(wrap, toggle); else nav.appendChild(wrap);
-      wrap.querySelector('select').addEventListener('change', function (ev) {
-        applyLang(ev.target.value);
+      const sel = wrap.querySelector('select');
+      if (sel) sel.addEventListener('change', function (ev) { applyLang(ev.target.value); });
+    });
+  }
+
+  // ---------- init sections, each isolated in try/catch (TERA AG Lesson 1) ----------
+
+  // Mobile nav toggle
+  try {
+    const toggle = document.querySelector('.nav-toggle');
+    const links = document.querySelector('.nav-links');
+    if (toggle && links) {
+      toggle.addEventListener('click', function () { links.classList.toggle('open'); });
+      links.querySelectorAll('a').forEach(function (a) {
+        a.addEventListener('click', function () { links.classList.remove('open'); });
       });
-    });
-  }
-
-  // ---- Existing behaviour below ----
-  const toggle = document.querySelector('.nav-toggle');
-  const links = document.querySelector('.nav-links');
-  if (toggle && links) {
-    toggle.addEventListener('click', function () { links.classList.toggle('open'); });
-    links.querySelectorAll('a').forEach(function (a) {
-      a.addEventListener('click', function () { links.classList.remove('open'); });
-    });
-  }
-
-  // Active nav link based on current path
-  const path = window.location.pathname.split('/').pop() || 'index.html';
-  document.querySelectorAll('.nav-links a').forEach(function (a) {
-    const href = a.getAttribute('href') || '';
-    if (href.endsWith(path) || (path === 'index.html' && href === '/index.html')) {
-      a.classList.add('active');
     }
-  });
+  } catch (e) { /* non-fatal */ }
 
-  // Reveal on scroll
-  const observer = new IntersectionObserver(function (entries) {
-    entries.forEach(function (entry) {
-      if (entry.isIntersecting) {
-        entry.target.classList.add('visible');
-        observer.unobserve(entry.target);
+  // Active nav link by path
+  try {
+    const path = window.location.pathname.split('/').pop() || 'index.html';
+    document.querySelectorAll('.nav-links a').forEach(function (a) {
+      const href = a.getAttribute('href') || '';
+      if (href.endsWith(path) || (path === 'index.html' && href === '/index.html')) {
+        a.classList.add('active');
       }
     });
-  }, { threshold: 0.12, rootMargin: '0px 0px -60px 0px' });
-  document.querySelectorAll('.reveal').forEach(function (el) { observer.observe(el); });
+  } catch (e) { /* non-fatal */ }
 
-  // Form submit UX (Netlify handles the POST natively; JS only shows pending state)
-  const form = document.querySelector('form[data-netlify="true"]');
-  if (form) {
-    form.addEventListener('submit', function () {
-      const btn = form.querySelector('button[type="submit"]');
-      if (btn) { btn.disabled = true; btn.textContent = 'Sending...'; }
-    });
+  // Scroll-reveal observer - adds .in (matching the CSS rule, NOT .visible)
+  function revealAll() {
+    document.querySelectorAll('.reveal:not(.in)').forEach(function (el) { el.classList.add('in'); });
   }
+  window._clodiaRevealAll = revealAll;
+  try {
+    if ('IntersectionObserver' in window) {
+      const observer = new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('in');
+            observer.unobserve(entry.target);
+          }
+        });
+      }, { threshold: 0.12, rootMargin: '0px 0px -60px 0px' });
+      document.querySelectorAll('.reveal').forEach(function (el) { observer.observe(el); });
+    } else {
+      revealAll(); // no IO support, show everything
+    }
+  } catch (e) { revealAll(); }
 
-  // Dynamic year in footer
-  const year = document.querySelector('[data-year]');
-  if (year) year.textContent = new Date().getFullYear();
+  // Failsafe: if any init above threw or the observer never fires for some reason,
+  // force every .reveal to visible after 2.5s. Idempotent via the :not(.in) selector.
+  setTimeout(revealAll, 2500);
 
-  // Boot i18n last so it operates on a fully painted DOM
-  injectSwitcher();
-  applyLang(pickInitialLang());
+  // Form submit UX
+  try {
+    const form = document.querySelector('form[data-netlify="true"]');
+    if (form) {
+      form.addEventListener('submit', function () {
+        const btn = form.querySelector('button[type="submit"]');
+        if (btn) { btn.disabled = true; btn.textContent = 'Sending...'; }
+      });
+    }
+  } catch (e) { /* non-fatal */ }
+
+  // Year in footer
+  try {
+    const year = document.querySelector('[data-year]');
+    if (year) year.textContent = new Date().getFullYear();
+  } catch (e) { /* non-fatal */ }
+
+  // i18n boot - also isolated so a translation error cannot block reveal
+  try { injectSwitcher(); } catch (e) { /* non-fatal */ }
+  try { applyLang(pickInitialLang()); } catch (e) { /* non-fatal */ }
 })();
