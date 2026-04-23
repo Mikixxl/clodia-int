@@ -589,9 +589,10 @@ section {
 
 /* ============ FOOTER ============ */
 footer {
-  background: var(--navy-deep);
-  color: rgba(255, 255, 255, 0.8);
+  background: var(--ivory);
+  color: var(--text-soft);
   padding: 72px 0 32px;
+  border-top: 1px solid var(--border);
 }
 
 .footer-grid {
@@ -609,37 +610,40 @@ footer {
 
 .footer-brand h4 {
   font-family: 'Cormorant Garamond', serif;
-  color: var(--white);
+  color: var(--navy);
   font-size: 1.4rem;
   margin-bottom: 12px;
 }
 
 .footer-brand p,
-.footer-col p { font-size: 0.9rem; line-height: 1.8; margin: 0; }
+.footer-col p { font-size: 0.9rem; line-height: 1.8; margin: 0; color: var(--text-soft); }
+
+.footer-brand a { color: var(--copper); }
+.footer-brand a:hover { color: var(--copper-dark); }
 
 .footer-col h5 {
   font-size: 0.78rem;
   letter-spacing: 0.2em;
   text-transform: uppercase;
-  color: var(--copper-light);
+  color: var(--copper);
   margin-bottom: 16px;
   font-weight: 600;
 }
 
 .footer-col ul { list-style: none; }
 .footer-col li { margin-bottom: 10px; }
-.footer-col a { color: rgba(255, 255, 255, 0.8); font-size: 0.9rem; }
-.footer-col a:hover { color: var(--copper-light); }
+.footer-col a { color: var(--navy-soft); font-size: 0.9rem; }
+.footer-col a:hover { color: var(--copper); }
 
 .footer-bottom {
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  border-top: 1px solid var(--border);
   padding-top: 24px;
   display: flex;
   justify-content: space-between;
   flex-wrap: wrap;
   gap: 16px;
   font-size: 0.85rem;
-  color: rgba(255, 255, 255, 0.6);
+  color: rgba(10, 22, 40, 0.55);
 }
 
 /* ============ ANIMATIONS ============ */
