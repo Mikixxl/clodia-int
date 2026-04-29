@@ -612,7 +612,6 @@ const I18N = {
       "consulting.002.strategic_counsel_for_cr": "Strategisch advies voor grensoverschrijdende handel, ontleend aan operationele praktijk. Acht praktijkgebieden geleverd door consultants wier onderliggende werk bestaat uit het uitvoeren van de transacties die zij adviseren.",
       "consulting.003.consulting_services": "Consulting Services",
       "consulting.004.strategic_counsel_for_cr": "Strategisch advies voor grensoverschrijdende handel, ontleend aan operationele praktijk.",
-      "consulting.005.eight_practice_areas": "Acht praktijkgebieden, geleverd door consultants waarvan het onderliggende werk bestaat uit het uitvoeren van de transacties die zij adviseren.",
       "consulting.005.eight_practice_areas_del": "Acht praktijkgebieden, uitgevoerd door consultants wiens onderliggende werk bestaat uit het uitvoeren van de transacties waarop zij adviseren."
   }
 
