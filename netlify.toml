@@ -1,6 +1,7 @@
 [build]
   publish = "."
 
+# --- Security headers (all paths) ---
 [[headers]]
   for = "/*"
   [headers.values]
@@ -10,20 +11,33 @@
     Permissions-Policy = "geolocation=(), microphone=(), camera=()"
     Strict-Transport-Security = "max-age=31536000; includeSubDomains; preload"
 
+# --- HTML: always revalidate (no stale content shown to users) ---
+[[headers]]
+  for = "/*.html"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+
+[[headers]]
+  for = "/"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+
+# --- CSS / JS: 1h cache + must-revalidate (so deploys propagate within 1h max) ---
 [[headers]]
   for = "/assets/css/*"
   [headers.values]
-    Cache-Control = "public, max-age=31536000, immutable"
+    Cache-Control = "public, max-age=3600, must-revalidate"
 
 [[headers]]
   for = "/assets/js/*"
   [headers.values]
-    Cache-Control = "public, max-age=31536000, immutable"
+    Cache-Control = "public, max-age=3600, must-revalidate"
 
+# --- Images: 1 day cache (rarely change) ---
 [[headers]]
   for = "/assets/images/*"
   [headers.values]
-    Cache-Control = "public, max-age=31536000, immutable"
+    Cache-Control = "public, max-age=86400"
 
 [[redirects]]
   from = "/services/"
